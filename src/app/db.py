@@ -1,32 +1,23 @@
 import os
+import ssl
 import pg8000
 
+DB_HOST = os.environ["DB_HOST"]
+DB_NAME = os.environ["DB_NAME"]
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
+DB_PORT = int(os.environ.get("DB_PORT", "5432"))
 
-def get_db_connection():
-    """
-    Open a new connection to the PostgreSQL database using environment variables.
+# Enable SSL/TLS for RDS PostgreSQL
+ssl_context = ssl.create_default_context()
 
-    Env vars expected (set by Terraform in lambda.tf):
-      - DB_HOST
-      - DB_PORT
-      - DB_NAME
-      - DB_USER
-      - DB_PASSWORD
-    """
-    host = os.environ.get("DB_HOST")
-    port = int(os.environ.get("DB_PORT", "5432"))
-    dbname = os.environ.get("DB_NAME")
-    user = os.environ.get("DB_USER")
-    password = os.environ.get("DB_PASSWORD")
 
-    if not all([host, dbname, user, password]):
-        raise RuntimeError("Database environment variables are not fully set.")
-
-    conn = pg8000.connect(
-        host=host,
-        port=port,
-        database=dbname,
-        user=user,
-        password=password,
+def get_connection():
+    return pg8000.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        ssl_context=ssl_context   # IMPORTANT FIX
     )
-    return conn
